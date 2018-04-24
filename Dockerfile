@@ -1,10 +1,11 @@
 FROM centos:6
 
-MAINTAINER conda-forge <conda-forge@googlegroups.com>
+MAINTAINER Ben Evans <b.evans@yale.edu>
 
 
-# Set an encoding to make things work smoothly.
+# Set environment variables
 ENV LANG en_US.UTF-8
+ENV PATH="/opt/conda/bin:${PATH}"
 
 # Add a timestamp for the build. Also, bust the cache.
 ADD http://tycho.usno.navy.mil/timer.html /opt/docker/etc/timestamp
@@ -18,7 +19,6 @@ RUN yum update -y && \
                    bzip2 \
                    make \
                    patch \
-                   sudo \
                    tar \
                    which \
                    libXext-devel \
@@ -39,38 +39,24 @@ RUN yum update -y && \
                    devtoolset-2-binutils \
                    devtoolset-2-gcc \
                    devtoolset-2-gcc-c++ && \
-    yum clean all
+    yum clean all && \
+    echo "source scl_source enable devtoolset-2" >> /etc/profile
 
-# give sudo permission for conda user to run yum (user creation is postponed
-# to the entrypoint, so we can create a user with the same id as the host)
-RUN echo 'conda ALL=NOPASSWD: /usr/bin/yum' >> /etc/sudoers
 
 # Install the latest Miniconda with Python 3 and update everything.
-RUN curl -s -L https://repo.continuum.io/miniconda/Miniconda3-4.3.21-Linux-x86_64.sh > miniconda.sh && \
-    openssl md5 miniconda.sh | grep c1c15d3baba15bf50293ae963abef853 && \
+RUN curl -s -L https://repo.continuum.io/miniconda/Miniconda3-4.4.10-Linux-x86_64.sh > miniconda.sh && \
+    openssl md5 miniconda.sh | grep bec6203dbb2f53011e974e9bf4d46e93 && \
     bash miniconda.sh -b -p /opt/conda && \
     rm miniconda.sh && \
     touch /opt/conda/conda-meta/pinned && \
-    export PATH=/opt/conda/bin:$PATH && \
     conda config --set show_channel_urls True && \
     conda config --add channels conda-forge && \
     conda update --all --yes && \
     conda clean -tipy
 
 # Install conda build and deployment tools.
-RUN export PATH="/opt/conda/bin:${PATH}" && \
-    conda install --yes --quiet conda-build anaconda-client jinja2 setuptools && \
+RUN conda install --yes conda-build anaconda-client jinja2 setuptools && \
     conda install --yes git && \
-    conda clean -tipsy
-
-# Install docker tools.
-RUN export PATH="/opt/conda/bin:${PATH}" && \
-    conda install --yes gosu && \
-    export CONDA_GOSU_INFO=( `conda list gosu | grep gosu` ) && \
-    echo "gosu ${CONDA_GOSU_INFO[1]}" >> /opt/conda/conda-meta/pinned && \
-    conda install --yes tini && \
-    export CONDA_TINI_INFO=( `conda list tini | grep tini` ) && \
-    echo "tini ${CONDA_TINI_INFO[1]}" >> /opt/conda/conda-meta/pinned && \
     conda clean -tipsy
 
 # Add a file for users to source to activate the `conda`
@@ -82,5 +68,4 @@ COPY entrypoint /opt/docker/bin/entrypoint
 # Ensure that all containers start with tini and the user selected process.
 # Activate the `conda` environment `root` and the devtoolset compiler.
 # Provide a default command (`bash`), which will start if the user doesn't specify one.
-ENTRYPOINT [ "/opt/conda/bin/tini", "--", "/opt/docker/bin/entrypoint" ]
-CMD [ "/bin/bash" ]
+ENTRYPOINT [ "/bin/bash", "-leo pipefail" ]
