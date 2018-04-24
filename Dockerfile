@@ -59,12 +59,6 @@ RUN conda install --yes conda-build anaconda-client jinja2 setuptools && \
     conda install --yes git && \
     conda clean -tipsy
 
-# Add a file for users to source to activate the `conda`
-# environment `root` and the devtoolset compiler. Also
-# add a file that wraps that for use with the `ENTRYPOINT`.
-COPY entrypoint_source /opt/docker/bin/entrypoint_source
-COPY entrypoint /opt/docker/bin/entrypoint
-
 # Ensure that all containers start with tini and the user selected process.
 # Activate the `conda` environment `root` and the devtoolset compiler.
 # Provide a default command (`bash`), which will start if the user doesn't specify one.
