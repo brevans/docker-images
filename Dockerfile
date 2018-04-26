@@ -7,9 +7,6 @@ MAINTAINER Ben Evans <b.evans@yale.edu>
 ENV LANG en_US.UTF-8
 ENV PATH="/opt/conda/bin:${PATH}"
 
-# Add a timestamp for the build. Also, bust the cache.
-ADD http://tycho.usno.navy.mil/timer.html /opt/docker/etc/timestamp
-
 # Resolves a nasty NOKEY warning that appears when using yum.
 RUN rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-6
 
@@ -59,7 +56,5 @@ RUN conda install --yes conda-build anaconda-client jinja2 setuptools && \
     conda install --yes git && \
     conda clean -tipsy
 
-# Ensure that all containers start with tini and the user selected process.
-# Activate the `conda` environment `root` and the devtoolset compiler.
 # Provide a default command (`bash`), which will start if the user doesn't specify one.
-ENTRYPOINT [ "/bin/bash", "-leo pipefail" ]
+CMD [ "/bin/bash" ]
