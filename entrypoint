@@ -1,0 +1,9 @@
+#!/bin/bash -il
+
+# toolset are not Python 3 compatible.
+. scl_source enable devtoolset-2
+
+# Activate the `root` conda environment.
+. /opt/conda/bin/activate root
+
+exec "$@"
